@@ -1209,7 +1209,7 @@ impl Wallet {
             .list_unspent() {
                 Ok(bdk_utxos) => bdk_utxos,
                 Err(err) => panic!("{}", err),
-            }
+            };
         for utxo in bdk_utxos.into_iter() {
             let db_txo = self
                 .database
