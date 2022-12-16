@@ -822,10 +822,20 @@ impl Wallet {
             .filter(|t| !t.spent)
             .map(|u| u.outpoint().to_string())
             .collect();
-        let bdk_utxos: Vec<LocalUtxo> = self
+        /*let bdk_utxos: Vec<LocalUtxo> = self
             .bdk_wallet
             .list_unspent()
             .map_err(InternalError::from)?;
+            */
+        let bdk_utxos: Vec<LocalUtxo> = match self
+            .bdk_wallet
+            .list_unspent() {
+                Ok(bdk_utxos) => bdk_utxos,
+                Err(err) => {
+                    debug!(self.logger, "{:?}", err);
+                    panic!("{:?}", err);
+                }
+            };
         let new_utxos: Vec<DbTxoActMod> = bdk_utxos
             .into_iter()
             .filter(|u| !db_outpoints.contains(&u.outpoint.to_string()))
