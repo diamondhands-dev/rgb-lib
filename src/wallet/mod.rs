@@ -1138,7 +1138,14 @@ impl Wallet {
         self._check_online(online)?;
 
         debug!(self.logger, "step 1");
-        self._sync_db_txos()?;
+        //self._sync_db_txos()?;
+        match self._sync_db_txos() {
+            Ok(_) => (),
+            Err(err) => {
+                debug!(self.logger, "{:?}", err);
+                panic!("{:?}", err)
+            }
+        };
 
         debug!(self.logger, "step 2");
         let unspent_txos = self.database.get_unspent_txos()?;
