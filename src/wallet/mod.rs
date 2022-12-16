@@ -834,6 +834,7 @@ impl Wallet {
         for new_utxo in new_utxos.iter().cloned() {
             self.database.set_txo(new_utxo)?;
         }
+        debug!(self.logger, "Syncing TXOs...done.");
 
         Ok(())
     }
@@ -1136,19 +1137,25 @@ impl Wallet {
         info!(self.logger, "Creating UTXOs (begin)...");
         self._check_online(online)?;
 
+        debug!(self.logger, "step 1");
         self._sync_db_txos()?;
 
+        debug!(self.logger, "step 2");
         let unspent_txos = self.database.get_unspent_txos()?;
+        debug!(self.logger, "step 3");
         let unspents: Vec<LocalUnspent> =
             self.database
                 .get_rgb_allocations(unspent_txos.clone(), false, None, None, None)?;
+        debug!(self.logger, "step 4");
         let allocatable = self
             ._get_available_allocations(unspents.clone(), vec![], None)?
             .len() as u8;
+        debug!(self.logger, "step 5");
 
         let mut utxos_to_create = num.unwrap_or(UTXO_NUM);
         if up_to {
             if allocatable >= utxos_to_create {
+        debug!(self.logger, "step 6");
                 return Err(Error::AllocationsAlreadyAvailable);
             } else {
                 utxos_to_create -= allocatable
