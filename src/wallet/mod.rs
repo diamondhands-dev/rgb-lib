@@ -1096,13 +1096,13 @@ impl Wallet {
         let mut psbt =
             match PartiallySignedTransaction::from_str(&unsigned_psbt) {
                 Ok(psbt) => psbt,
-                Err(err) => panic!("{}", err),
+                Err(err) => { info!(self.logger, "psbt {}", err); panic!("{}", err) },
             };
 
         match self.bdk_wallet
             .sign(&mut psbt, SignOptions::default()) {
             Ok(_) => (),
-            Err(err) => panic!("{}", err),
+            Err(err) => { info!(self.logger, "sign {}", err); panic!("{}", err) },
         }
         println!("Calling create_utxos_end");
         self.create_utxos_end(online, psbt.to_string())
@@ -1208,7 +1208,10 @@ impl Wallet {
             .bdk_wallet
             .list_unspent() {
                 Ok(bdk_utxos) => bdk_utxos,
-                Err(err) => panic!("{}", err),
+                Err(err) => {
+                    info!(self.logger, "bdk_utxos {}", err);
+                    panic!("bdk_utxos {}", err);
+                }
             };
         for utxo in bdk_utxos.into_iter() {
             let db_txo = self
