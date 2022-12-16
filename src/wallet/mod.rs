@@ -815,6 +815,7 @@ impl Wallet {
             .sync(self._bdk_blockchain()?, SyncOptions { progress: None })
             .map_err(|e| Error::FailedBdkSync(e.to_string()))?;
 
+                    debug!(self.logger, "0");
         let db_outpoints: Vec<String> = self
             .database
             .iter_txos()?
@@ -822,6 +823,7 @@ impl Wallet {
             .filter(|t| !t.spent)
             .map(|u| u.outpoint().to_string())
             .collect();
+                    debug!(self.logger, "1");
         /*let bdk_utxos: Vec<LocalUtxo> = self
             .bdk_wallet
             .list_unspent()
@@ -832,8 +834,8 @@ impl Wallet {
             .list_unspent() {
                 Ok(bdk_utxos) => bdk_utxos,
                 Err(err) => {
-                    debug!(self.logger, "{:?}", err);
-                    panic!("{:?}", err);
+                    debug!(self.logger, "a {:?}", err);
+                    panic!("a {:?}", err);
                 }
             };
         let new_utxos: Vec<DbTxoActMod> = bdk_utxos
@@ -846,8 +848,8 @@ impl Wallet {
             match self.database.set_txo(new_utxo) {
                 Ok(_) => (),
                 Err(err) => {
-                    debug!(self.logger, "{:?}", err);
-                    panic!("{:?}", err);
+                    debug!(self.logger, "b {:?}", err);
+                    panic!("b {:?}", err);
                 },
             };
         }
