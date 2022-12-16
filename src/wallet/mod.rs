@@ -1199,10 +1199,17 @@ impl Wallet {
         let tx = self._broadcast_psbt(signed_psbt)?;
 
         let mut num_utxos_created = 0;
-        let bdk_utxos: Vec<LocalUtxo> = self
+        /*let bdk_utxos: Vec<LocalUtxo> = self
             .bdk_wallet
             .list_unspent()
             .map_err(InternalError::from)?;
+        */
+        let bdk_utxos: Vec<LocalUtxo> = match self
+            .bdk_wallet
+            .list_unspent() {
+                Ok(bdk_utxos) => bdk_utxos,
+                Err(err) => panic!("{}", err),
+            }
         for utxo in bdk_utxos.into_iter() {
             let db_txo = self
                 .database
