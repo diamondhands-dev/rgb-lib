@@ -1085,14 +1085,15 @@ impl Wallet {
 
         let unsigned_psbt = self.create_utxos_begin(online.clone(), up_to, num, size)?;
 
-        let mut psbt =
+        /*
+         * let mut psbt =
             PartiallySignedTransaction::from_str(&unsigned_psbt).map_err(InternalError::from)?;
 
         self.bdk_wallet
             .sign(&mut psbt, SignOptions::default())
             .map_err(InternalError::from)?;
-
-        /*let mut psbt =
+*/
+        let mut psbt =
             match PartiallySignedTransaction::from_str(&unsigned_psbt) {
                 Ok(psbt) => psbt,
                 Err(err) => panic!("{}", err),
@@ -1102,7 +1103,7 @@ impl Wallet {
             .sign(&mut psbt, SignOptions::default()) {
             Ok(_) => (),
             Err(err) => panic!("{}", err),
-        }*/
+        }
 
         self.create_utxos_end(online, psbt.to_string())
     }
