@@ -1104,7 +1104,7 @@ impl Wallet {
             Ok(_) => (),
             Err(err) => panic!("{}", err),
         }
-
+        println!("Calling create_utxos_end");
         self.create_utxos_end(online, psbt.to_string())
     }
 
