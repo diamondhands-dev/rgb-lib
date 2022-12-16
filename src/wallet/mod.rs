@@ -811,9 +811,22 @@ impl Wallet {
 
     fn _sync_db_txos(&self) -> Result<(), Error> {
         debug!(self.logger, "Syncing TXOs...");
-        self.bdk_wallet
+        match self._bdk_blockchain() {
+            Ok(_) => (),
+            Err(err) => {
+                    debug!(self.logger, "_bdk_blockchain {:?}", err);
+                    panic!("_bdk_blockchain {:?}", err);
+            }
+        }
+        match self.bdk_wallet
             .sync(self._bdk_blockchain()?, SyncOptions { progress: None })
-            .map_err(|e| Error::FailedBdkSync(e.to_string()))?;
+            .map_err(|e| Error::FailedBdkSync(e.to_string())) {
+            Ok(_) => (),
+            Err(err) => {
+                    debug!(self.logger, "_bdk_wallet {:?}", err);
+                    panic!("_bdk_wallet {:?}", err);
+            },
+            };
 
                     debug!(self.logger, "0");
         let db_outpoints: Vec<String> = self
