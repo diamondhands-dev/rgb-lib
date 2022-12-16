@@ -842,7 +842,14 @@ impl Wallet {
             .map(DbTxoActMod::from)
             .collect();
         for new_utxo in new_utxos.iter().cloned() {
-            self.database.set_txo(new_utxo)?;
+            // self.database.set_txo(new_utxo)?;
+            match self.database.set_txo(new_utxo) {
+                Ok(_) => (),
+                Err(err) => {
+                    debug!(self.logger, "{:?}", err);
+                    panic!("{:?}", err);
+                },
+            };
         }
         debug!(self.logger, "Syncing TXOs...done.");
 
