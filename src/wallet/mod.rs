@@ -1822,17 +1822,42 @@ impl Wallet {
         Ok(())
     }
 
+    /// Resume online with the published Online object.
+    pub fn go_online_with_online(
+        &mut self,
+        skip_consistency_check: bool,
+        online: Online) -> Result<Online, Error> {
+        let some = Some(online.clone());
+        self.__go_online(skip_consistency_check, online.electrum_url, online.proxy_url, some)
+    }
+
     fn _go_online(
         &mut self,
         skip_consistency_check: bool,
         electrum_url: String,
         proxy_url: String,
     ) -> Result<Online, Error> {
+        self.__go_online(skip_consistency_check, electrum_url, proxy_url, None)
+    }
+
+    fn __go_online(
+        &mut self,
+        skip_consistency_check: bool,
+        electrum_url: String,
+        proxy_url: String,
+        online: Option<Online>,
+    ) -> Result<Online, Error> {
+        let must_spawn = online.is_none();
         let online_id = now().unix_timestamp_nanos() as u64;
-        let online = Online {
-            id: online_id,
-            electrum_url: electrum_url.clone(),
-            proxy_url: proxy_url.clone(),
+        let online = match online {
+            Some(online) => online,
+            None => {
+                Online {
+                    id: online_id,
+                    electrum_url: electrum_url.clone(),
+                    proxy_url: proxy_url.clone(),
+                }
+            },
         };
         self.online = Some(online.clone());
 
@@ -1864,29 +1889,33 @@ impl Wallet {
         let ctl_endpoint = ServiceAddr::Inproc(format!("ctl-endpoint-{}", online_id));
         let storm_endpoint = ServiceAddr::Inproc(format!("storm-endpoint-{}", online_id));
         let store_endpoint = ServiceAddr::Inproc(format!("store-endpoint-{}", online_id));
-        let mut config = StoreConfig {
-            data_dir: self.wallet_dir.clone(),
-            rpc_endpoint: store_endpoint.clone(),
-            verbose: 7,
-            databases: vec![].into_iter().collect(),
-        };
-        config.process();
-        thread::spawn(move || {
-            stored::service::run(config).expect("running stored runtime");
-        });
-        let config = Config {
-            rpc_endpoint: rpc_endpoint.clone(),
-            ctl_endpoint,
-            storm_endpoint,
-            store_endpoint,
-            data_dir: self.wallet_dir.clone(),
-            electrum_url,
-            chain: rgb_network.clone(),
-            threaded: true,
-        };
-        thread::spawn(move || {
-            rgbd::run(config).expect("running rgbd runtime");
-        });
+            println!("before must_spawn");
+        if must_spawn {
+            println!("must_spawn");
+            let mut config = StoreConfig {
+                data_dir: self.wallet_dir.clone(),
+                rpc_endpoint: store_endpoint.clone(),
+                verbose: 7,
+                databases: vec![].into_iter().collect(),
+            };
+            config.process();
+            thread::spawn(move || {
+                stored::service::run(config).expect("running stored runtime");
+            });
+        }
+            let config = Config {
+                rpc_endpoint: rpc_endpoint.clone(),
+                ctl_endpoint,
+                storm_endpoint,
+                store_endpoint,
+                data_dir: self.wallet_dir.clone(),
+                electrum_url,
+                chain: rgb_network.clone(),
+                threaded: true,
+            };
+            thread::spawn(move || {
+                rgbd::run(config).expect("running rgbd runtime");
+            });
         self.rgb_client = Some(
             Client::with(rpc_endpoint, "rgb-ffi".to_string(), rgb_network)
                 .expect("Error initializing client"),
